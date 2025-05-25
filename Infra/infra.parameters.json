@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "sqlServerName": {
+      "value": "ahsqlserver3123"
+    },
+    "sqlAdminUsername": {
+      "value": "sqladminuser"
+    },
+    "sqlAdminPassword": {
+      "value": "ah@Password123"
+    },
+    "sqlDatabaseName": {
+      "value": "mydatabase"
+    },
+    "appServicePlanName": {
+      "value": "myAppServicePlan"
+    },
+    "webAppName": {
+      "value": "mynodeapp3123"
+    }
+  }
+}

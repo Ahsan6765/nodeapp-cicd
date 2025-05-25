@@ -1,0 +1,144 @@
+/* public/styles.css */
+
+/* Import clean modern font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #4e54c8, #8f94fb);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #2c3e50;
+  user-select: none;
+}
+
+.container {
+  background: #fff;
+  width: 380px;
+  padding: 48px 40px;
+  border-radius: 20px;
+  box-shadow: 0 12px 28px rgba(78, 84, 200, 0.3);
+  text-align: center;
+  transition: box-shadow 0.3s ease;
+}
+
+.container:hover {
+  box-shadow: 0 18px 40px rgba(78, 84, 200, 0.45);
+}
+
+h2 {
+  font-weight: 700;
+  font-size: 2.1rem;
+  color: #363f73;
+  margin-bottom: 36px;
+  letter-spacing: 0.05em;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  padding: 16px 20px;
+  font-size: 1rem;
+  border-radius: 14px;
+  border: 2px solid #d1d9ff;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  outline: none;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+  border-color: #4e54c8;
+  box-shadow: 0 0 8px #4e54c8aa;
+}
+
+button {
+  background-color: #4e54c8;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.2rem;
+  padding: 16px 0;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(78, 84, 200, 0.4);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+button:hover {
+  background-color: #3b3f99;
+  box-shadow: 0 14px 40px rgba(59, 63, 153, 0.6);
+}
+
+.message {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #e53e3e;
+  min-height: 26px;
+  margin-top: -8px;
+  margin-bottom: 12px;
+}
+
+.redirect-link {
+  margin-top: 26px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #6b7280;
+  letter-spacing: 0.02em;
+}
+
+.redirect-link a {
+  color: #4e54c8;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.redirect-link a:hover {
+  color: #3b3f99;
+  text-decoration: underline;
+}
+
+/* Home page */
+
+.home-welcome {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #363f73;
+  margin-bottom: 48px;
+  letter-spacing: 0.04em;
+}
+
+.logout-link {
+  background-color: #e53e3e;
+  padding: 16px 48px;
+  border-radius: 14px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+  box-shadow: 0 10px 28px rgba(229, 62, 62, 0.5);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  display: inline-block;
+  user-select: none;
+}
+
+.logout-link:hover {
+  background-color: #c53030;
+  box-shadow: 0 14px 40px rgba(197, 48, 48, 0.6);
+}
