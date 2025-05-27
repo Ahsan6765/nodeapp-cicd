@@ -1,0 +1,51 @@
+name: Deploy Node.js App and Azure Infra
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AZURE_RESOURCE_GROUP: myResourceGroup
+  AZURE_LOCATION: eastus
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '22'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Set up Azure CLI
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy Azure Infrastructure using Bicep
+      run: |
+        az deployment group create \
+          --name bicepDeployment \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --template-file Infra/infra.bicep \
+          --parameters Infra/infra.parameters.json \
+          --location ${{ env.AZURE_LOCATION }}
+
+    - name: Upload artifacts (zip for deploy)
+      run: |
+        zip -r nodeapp.zip . -x "node_modules/*" ".git/*"
+
+    - name: Deploy app to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: mynodeapp3123
+        slot-name: production
+        package: nodeapp.zip
