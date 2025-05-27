@@ -113,7 +113,7 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
       linuxFxVersion: 'NODE|22-lts'
       appSettings: [
         {
-          name: 'ConnectionStrings__DefaultConnection'
+          name: 'DB_CONNECTION_STRING'
           value: 'Server=tcp:${sqlServer.name}.database.windows.net,1433;Initial Catalog=${sqlDatabase.name};User ID=${sqlAdminUsername};Password=${sqlAdminPassword};Encrypt=true;Connection Timeout=30;'
         }
       ]
