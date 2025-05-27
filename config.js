@@ -2,14 +2,7 @@ const sql = require('mssql');
 require('dotenv').config();
 
 const config = {
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    server: process.env.DB_SERVER, 
-    database: process.env.DB_NAME,
-    options: {
-        encrypt: true,
-        trustServerCertificate: false
-    }
+    connectionString: process.env.DB_CONNECTION_STRING || 'Server=tcp:ahsqlserver3123.database.windows.net,1433;Initial Catalog=mydatabase;User ID=sqladminuser;Password=ah@Password123;Encrypt=true;Connection Timeout=30;'
 };
 
 module.exports = { sql, config };
