@@ -31,7 +31,7 @@ jobs:
 
       
     - name: Az Bicep Deployment
-      working-directory: '${{github.workspace}}/src/bicep'
+      working-directory: '${{ github.workspace }}/src/bicep'
       run: |
           az deployment group create --resource-group ah-infra-deployment-rg --template-file ./infra.bicep --parameters @infra.parameters.json
 
