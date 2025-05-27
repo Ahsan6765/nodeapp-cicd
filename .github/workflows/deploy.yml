@@ -7,7 +7,6 @@ on:
 
 env:
   AZURE_RESOURCE_GROUP: ahtaskrg
-  AZURE_LOCATION: centralus
 
 jobs:
   deploy:
@@ -30,14 +29,11 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Deploy Azure Infrastructure using Bicep
+      
+    - name: Az Bicep Deployment
+      working-directory: '${{github.workspace}}/src/bicep'
       run: |
-        az deployment group create \
-          --name bicepDeployment \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --template-file Infra/infra.bicep \
-          --parameters Infra/infra.parameters.json \
-          --location ${{ env.AZURE_LOCATION }}
+          az deployment group create --resource-group ah-infra-deployment-rg --template-file ./infra.bicep --parameters @infra.parameters.json
 
     - name: Upload artifacts (zip for deploy)
       run: |
