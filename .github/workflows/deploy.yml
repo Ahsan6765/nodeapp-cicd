@@ -6,8 +6,8 @@ on:
       - main
 
 env:
-  AZURE_RESOURCE_GROUP: myResourceGroup
-  AZURE_LOCATION: eastus
+  AZURE_RESOURCE_GROUP: ahtaskrg
+  AZURE_LOCATION: centralus
 
 jobs:
   deploy:
