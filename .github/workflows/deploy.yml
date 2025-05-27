@@ -1,107 +1,52 @@
-
-name: Node.js CI/CD Pipeline
+name: Deploy Node.js App and Azure Infra
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 env:
-  NODE_VERSION: 'NODE|22-lts'
-  AZURE_WEBAPP_NAME: 'mynodeapp3123'
-  AZURE_RESOURCE_GROUP: 'ah-infra-deployment-rg'
+  AZURE_RESOURCE_GROUP: ahtaskrg
 
 jobs:
-  build:
-    name: Build Application
+  deploy:
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install Dependencies
-        run: |
-          npm ci
-          npm run build --if-present
-
-      - name: Run Tests
-        run: npm test --if-present
-        continue-on-error: true
-
-      - name: Create Deployment Package
-        run: |
-          zip -r nodeapp.zip . \
-            -x "node_modules/*" \
-            -x ".git/*" \
-            -x ".github/*" \
-            -x "tests/*"
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: node-app
-          path: nodeapp.zip
-          retention-days: 1
-
-  deploy-infra:
-    name: Deploy Infrastructure
-    needs: build
-    runs-on: ubuntu-latest
-    environment: production
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '22'
 
-      - name: Deploy Bicep Template
-        working-directory: ${{ github.workspace }}/src/Infra
-        run: |
-          az deployment group create \
-            --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --template-file infra.bicep \
-            --parameters @infra.parameters.json
+    - name: Install dependencies
+      run: npm install
 
-  deploy-app:
-    name: Deploy Application
-    needs: [build, deploy-infra]
-    runs-on: ubuntu-latest
-    environment: production
+    - name: Set up Azure CLI
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    steps:
-      - name: Download Artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: node-app
+      
+    - name: Az Bicep Deployment
+      working-directory: ${{ github.workspace }}/src/Infra
+      run: |
+          az deployment group create --resource-group ah-infra-deployment-rg --template-file infra.bicep --parameters @infra.parameters.json
 
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          slot-name: production
-          package: nodeapp.zip
-
-      - name: Post Deployment Health Check
-        run: |
-          sleep 30
-          curl -sSf https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/health || exit 1
-
-
-
+    - name: Install Dependencies and Build
+      run: |
+        npm ci
+        npm run build --if-present
+      
+    - name: Zip artifact for deployment
+      run: |
+        zip -r nodeapp.zip . -x "node_modules/*" ".git/*"
+      
+    - name: Install Dependencies on Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ secrets.WEB_APP_NAME }}
+        package: nodeapp.zip
+        startup-command: 'npm install && npm start'
