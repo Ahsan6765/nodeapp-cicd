@@ -110,7 +110,7 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-      linuxFxVersion: 'NODE|22-lts'
+      linuxFxVersion: 'NODE|18-lts'
       appSettings: [
         {
           name: 'DB_CONNECTION_STRING'
