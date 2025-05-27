@@ -19,7 +19,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
+        node-version: '22'
 
     - name: Install dependencies
       run: npm install
@@ -33,20 +33,13 @@ jobs:
     - name: Az Bicep Deployment
       working-directory: ${{ github.workspace }}/src/Infra
       run: |
-          az deployment group create --resource-group ahtaskrg --template-file infra.bicep --parameters @infra.parameters.json
-
-    - name: Install Dependencies and Build
-      run: |
-        npm ci
-        npm run build --if-present
-      
-    - name: Zip artifact for deployment
+          az deployment group create --resource-group ah-infra-deployment-rg --template-file infra.bicep --parameters @infra.parameters.json
+    - name: Upload artifacts (zip for deploy)
       run: |
         zip -r nodeapp.zip . -x "node_modules/*" ".git/*"
-      
-    - name: Install Dependencies on Web App
+    - name: Deploy app to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
-        app-name: ${{ secrets.WEB_APP_NAME }}
+        app-name: mynodeapp3123
+        slot-name: production
         package: nodeapp.zip
-        startup-command: 'npm install && npm start'
