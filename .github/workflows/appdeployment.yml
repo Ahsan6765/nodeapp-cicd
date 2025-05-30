@@ -40,7 +40,7 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Az Bicep Deployment
-      working-directory: ${{ github.workspace }}/Infra
+      working-directory: ${{ github.workspace }}/src/Infra
       run: |
         az deployment group create \
           --resource-group ah-infra-deployment-rg \
