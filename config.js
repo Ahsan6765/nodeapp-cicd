@@ -2,7 +2,11 @@ const sql = require('mssql');
 require('dotenv').config();
 
 const config = {
-    connectionString: process.env.DB_CONNECTION_STRING || 'Server=tcp:ahsqlserver3123.database.windows.net,1433;Initial Catalog=mydatabase;User ID=sqladminuser;Password=ah@Password123;Encrypt=true;Connection Timeout=30;'
+    connectionString: process.env.AZURE_SQL_CONNECTION_STRING,
+    options: {
+        encrypt: true,
+        trustServerCertificate: false
+    }
 };
 
 module.exports = { sql, config };

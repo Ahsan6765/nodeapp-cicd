@@ -1,18 +1,16 @@
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const sql = require('mssql');
 const dotenv = require('dotenv');
 const path = require('path');
-const session = require('express-session');
+const session = require('express-session');  // <-- Added
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-
-// Load connection string from .env
-const connectionString = process.env.AZURE_SQL_CONNECTION_STRING;
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -25,10 +23,20 @@ app.use(session({
     secret: 'supersecretkey',
     resave: false,
     saveUninitialized: true,
-    cookie: {
-        secure: false // Set to true in production with HTTPS
-    }
+    cookie: { secure: false } // Set secure: true in production with HTTPS
 }));
+
+// SQL Configuration
+const dbConfig = {
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    server: process.env.DB_SERVER,
+    database: process.env.DB_NAME,
+    options: {
+        encrypt: true,
+        trustServerCertificate: true
+    }
+};
 
 // Root route redirect to /register
 app.get('/', (req, res) => {
@@ -46,14 +54,12 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-        await sql.connect(connectionString);
+        await sql.connect(dbConfig);
         await sql.query`INSERT INTO AppUsers (username, email, password) VALUES (${username}, ${email}, ${hashedPassword})`;
         res.redirect('/login');
     } catch (err) {
-        console.error('Registration Error:', err);
+        console.error(err);
         res.render('register', { message: 'Registration failed. Username might be taken.' });
-    } finally {
-        sql.close(); // Always close the connection
     }
 });
 
@@ -67,7 +73,7 @@ app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        await sql.connect(connectionString);
+        await sql.connect(dbConfig);
         const result = await sql.query`SELECT * FROM AppUsers WHERE username = ${username}`;
 
         if (result.recordset.length === 0) {
@@ -78,16 +84,14 @@ app.post('/login', async (req, res) => {
         const isPasswordMatch = await bcrypt.compare(password, user.password);
 
         if (isPasswordMatch) {
-            req.session.user = user.username;
+            req.session.user = user.username;  // <-- Save session
             res.redirect('/home');
         } else {
             res.render('login', { message: 'Invalid username or password.' });
         }
     } catch (err) {
-        console.error('Login Error:', err);
+        console.error(err);
         res.render('login', { message: 'Login failed. Please try again.' });
-    } finally {
-        sql.close(); // Always close the connection
     }
 });
 
@@ -103,7 +107,7 @@ app.get('/home', (req, res) => {
 app.get('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
-            console.error('Logout Error:', err);
+            console.error(err);
         }
         res.redirect('/login');
     });
