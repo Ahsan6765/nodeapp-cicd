@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '22.x'
+  NODE_VERSION: '18.x'  # Changed from 22.x to LTS version
   AZURE_WEBAPP_NAME: 'mynodeapp3123'
   AZURE_RESOURCE_GROUP: 'ah-infra-deployment-rg'
 
@@ -38,7 +38,7 @@ jobs:
 
     - name: Create deployment package
       run: |
-        mkdir deployment
+        mkdir -p deployment
         cp package*.json deployment/
         cp -r app.js config.js views public deployment/
         cd deployment
@@ -46,10 +46,11 @@ jobs:
         zip -r ../nodeapp.zip ./*
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2  # Changed from v3 to v2
       with:
         name: app-artifact
         path: nodeapp.zip
+        if-no-files-found: error
         retention-days: 1
 
   deploy-infra:
@@ -67,7 +68,7 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Deploy Bicep template
-      working-directory: ${{ github.workspace }}/Infra
+      working-directory: ${{ github.workspace }}/src/Infra
       run: |
         az deployment group create \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
@@ -81,9 +82,10 @@ jobs:
 
     steps:
     - name: Download artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v2  # Changed from v3 to v2
       with:
         name: app-artifact
+        path: .
 
     - name: Azure login
       uses: azure/login@v1
