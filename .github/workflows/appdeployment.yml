@@ -36,6 +36,15 @@ jobs:
         npm install
         npm install express@4.21.2 mssql@9.3.2 --save-exact
 
+    - name: Deploy Infrastructure
+      working-directory: ${{ github.workspace }}/src/Infra
+      run: |
+        az deployment group create \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --template-file infra.bicep \
+          --parameters @infra.parameters.json
+
+
     - name: Create deployment package
       run: |
         mkdir deployment
@@ -70,14 +79,7 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Deploy Infrastructure
-      working-directory: ${{ github.workspace }}/src/Infra
-      run: |
-        az deployment group create \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --template-file infra.bicep \
-          --parameters @infra.parameters.json
-
+    
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
