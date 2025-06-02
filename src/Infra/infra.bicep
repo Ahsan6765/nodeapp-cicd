@@ -15,9 +15,7 @@ param sqlAdminPassword string
 param sqlDatabaseName string = 'mydatabase'
 
 
-//
 // SQL Server
-//
 resource sqlServer 'Microsoft.Sql/servers@2022-02-01-preview' = {
   name: sqlServerName
   location: location
@@ -27,9 +25,7 @@ resource sqlServer 'Microsoft.Sql/servers@2022-02-01-preview' = {
   }
 }
 
-//
 // SQL Database
-//
 resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-02-01-preview' = {
   name: sqlDatabaseName
   parent: sqlServer
@@ -47,9 +43,7 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-02-01-preview' = {
   }
 
 
-//
 // Firewall rule to allow Azure services
-//
 resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2022-02-01-preview' = {
   name: 'AllowAzureServices'
   parent: sqlServer
@@ -59,9 +53,7 @@ resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2022-02-01-prev
   }
 }
 
-//
 // Firewall rule to allow client's public IP
-//
 resource allowClientIP 'Microsoft.Sql/servers/firewallRules@2022-02-01-preview' = {
   name: 'AllowClientIP'
   parent: sqlServer
@@ -81,9 +73,7 @@ param appServicePlanName string
 @description('The name of the Web App')
 param webAppName string 
 
-//
 // App Service Plan (Linux)
-//
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: appServicePlanName
   location: location
@@ -101,7 +91,6 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
 
 
 // Web App for Node.js with connection string
-//
 resource webApp 'Microsoft.Web/sites@2022-03-01' = {
   name: webAppName
   location: location
