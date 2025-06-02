@@ -7,13 +7,15 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '18.x'
+  NODE_VERSION: '22.x'
   AZURE_WEBAPP_NAME: 'mynodeapp3123'
+  AZURE_RESOURCE_GROUP: 'ah-infra-deployment-rg'
 
 jobs:
-  deploy:
+  build:
+    name:  Build Application
     runs-on: ubuntu-latest
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -34,31 +36,59 @@ jobs:
         npm install
         npm install express@4.21.2 mssql@9.3.2 --save-exact
 
-    - name: Set up Azure CLI
+    - name: Create deployment package
+      run: |
+        mkdir deployment
+        cp package*.json deployment/
+        cp -r app.js config.js views public deployment/
+        cd deployment
+        npm ci --only=production
+        zip -r ../nodeapp.zip ./*
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-artifact
+        path: nodeapp.zip
+        retention-days: 1
+
+  deploy-infra:
+    name:  Deploy Infrastructure
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Azure login
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Az Bicep Deployment
-      working-directory: ${{ github.workspace }}/src/Infra
+    - name: Deploy Bicep template
+      working-directory: ${{ github.workspace }}/Infra
       run: |
         az deployment group create \
-          --resource-group ah-infra-deployment-rg \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --template-file infra.bicep \
           --parameters @infra.parameters.json
 
-    - name: Prepare deployment package
-      run: |
-        # Create deployment directory
-        mkdir deployment
-        # Copy application files
-        cp package*.json deployment/
-        cp -r app.js config.js views public deployment/
-        cd deployment
-        # Install production dependencies
-        npm ci --only=production
-        # Create deployment package
-        zip -r ../nodeapp.zip ./*
+  deploy-app:
+    name:  Deploy Application
+    needs: [build, deploy-infra]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: app-artifact
+
+    - name: Azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
