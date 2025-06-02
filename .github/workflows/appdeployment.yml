@@ -9,26 +9,22 @@ on:
 env:
   NODE_VERSION: '18.x'
   AZURE_WEBAPP_NAME: 'mynodeapp3123'
-  AZURE_RESOURCE_GROUP: 'ah-infra-deployment-rg'
 
 jobs:
-  build:
-    name: 🏗️ Build Application
+  deploy:
     runs-on: ubuntu-latest
-    outputs:
-      build_id: ${{ github.run_id }}
-    
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v3
 
     - name: Setup Node.js
-      uses: actions/setup-node@v3.7.0
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
 
-    - name: Clean installation
+    - name: Clean npm cache
       run: |
         rm -rf node_modules
         rm -f package-lock.json
@@ -38,71 +34,35 @@ jobs:
         npm install
         npm install express@4.21.2 mssql@9.3.2 --save-exact
 
-    - name: Create deployment package
-      run: |
-        mkdir -p deployment
-        cp package*.json deployment/
-        cp -r app.js config.js views public deployment/
-        cd deployment
-        npm ci --only=production
-        zip -r ../nodeapp.zip ./*
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0
-      with:
-        name: app-artifact-${{ github.run_id }}
-        path: nodeapp.zip
-
-  deploy-infra:
-    name: 🚀 Deploy Infrastructure
-    needs: build
-    runs-on: ubuntu-latest
-    environment: production
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3.5.3
-
-    - name: Azure login
-      uses: azure/login@v1.4.6
+    - name: Set up Azure CLI
+      uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Deploy Bicep template
+    - name: Az Bicep Deployment
       working-directory: ${{ github.workspace }}/src/Infra
       run: |
         az deployment group create \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --resource-group ah-infra-deployment-rg \
           --template-file infra.bicep \
-          --parameters @infra.parameters.json \
-          --mode Incremental
+          --parameters @infra.parameters.json
 
-  deploy-app:
-    name: 📦 Deploy Application
-    needs: [build, deploy-infra]
-    runs-on: ubuntu-latest
-    environment: production
-
-    steps:
-    - name: Download artifact
-      uses: actions/download-artifact@v1.0.0
-      with:
-        name: app-artifact-${{ needs.build.outputs.build_id }}
-
-    - name: Azure login
-      uses: azure/login@v1.4.6
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Prepare deployment package
+      run: |
+        # Create deployment directory
+        mkdir deployment
+        # Copy application files
+        cp package*.json deployment/
+        cp -r app.js config.js views public deployment/
+        cd deployment
+        # Install production dependencies
+        npm ci --only=production
+        # Create deployment package
+        zip -r ../nodeapp.zip ./*
 
     - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v2.2.10
+      uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         package: nodeapp.zip
         startup-command: 'npm start'
-
-    - name: Azure logout
-      run: |
-        az logout
-        az cache purge
-        az account clear
