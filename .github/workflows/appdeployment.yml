@@ -7,26 +7,28 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '18.x'  # Changed from 22.x to LTS version
+  NODE_VERSION: '18.x'
   AZURE_WEBAPP_NAME: 'mynodeapp3123'
   AZURE_RESOURCE_GROUP: 'ah-infra-deployment-rg'
 
 jobs:
   build:
-    name:  Build Application
+    name: 🏗️ Build Application
     runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ github.run_id }}
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3.5.3
 
     - name: Setup Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3.7.0
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
 
-    - name: Clean npm cache
+    - name: Clean installation
       run: |
         rm -rf node_modules
         rm -f package-lock.json
@@ -46,24 +48,23 @@ jobs:
         zip -r ../nodeapp.zip ./*
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v2  # Changed from v3 to v2
+      uses: actions/upload-artifact@v1.0.0
       with:
-        name: app-artifact
+        name: app-artifact-${{ github.run_id }}
         path: nodeapp.zip
-        if-no-files-found: error
-        retention-days: 1
 
   deploy-infra:
-    name:  Deploy Infrastructure
+    name: 🚀 Deploy Infrastructure
     needs: build
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3.5.3
 
     - name: Azure login
-      uses: azure/login@v1
+      uses: azure/login@v1.4.6
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -73,28 +74,35 @@ jobs:
         az deployment group create \
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --template-file infra.bicep \
-          --parameters @infra.parameters.json
+          --parameters @infra.parameters.json \
+          --mode Incremental
 
   deploy-app:
-    name:  Deploy Application
+    name: 📦 Deploy Application
     needs: [build, deploy-infra]
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
     - name: Download artifact
-      uses: actions/download-artifact@v2  # Changed from v3 to v2
+      uses: actions/download-artifact@v1.0.0
       with:
-        name: app-artifact
-        path: .
+        name: app-artifact-${{ needs.build.outputs.build_id }}
 
     - name: Azure login
-      uses: azure/login@v1
+      uses: azure/login@v1.4.6
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v2
+      uses: azure/webapps-deploy@v2.2.10
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         package: nodeapp.zip
         startup-command: 'npm start'
+
+    - name: Azure logout
+      run: |
+        az logout
+        az cache purge
+        az account clear
