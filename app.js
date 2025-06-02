@@ -26,7 +26,7 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     cookie: {
-        secure: false // Set to true in production with HTTPS
+        secure: false 
     }
 }));
 
@@ -53,7 +53,7 @@ app.post('/register', async (req, res) => {
         console.error('Registration Error:', err);
         res.render('register', { message: 'Registration failed. Username might be taken.' });
     } finally {
-        sql.close(); // Always close the connection
+        sql.close(); 
     }
 });
 
@@ -87,7 +87,7 @@ app.post('/login', async (req, res) => {
         console.error('Login Error:', err);
         res.render('login', { message: 'Login failed. Please try again.' });
     } finally {
-        sql.close(); // Always close the connection
+        sql.close(); 
     }
 });
 
