@@ -9,13 +9,11 @@ on:
 env:
   NODE_VERSION: '18.x'
   AZURE_WEBAPP_NAME: 'mynodeapp3123'
-  AZURE_RESOURCE_GROUP: 'ah-infra-deployment-rg'
 
 jobs:
-  build:
-    name: Build Application
+  build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -36,50 +34,32 @@ jobs:
         npm install
         npm install express@4.21.2 mssql@9.3.2 --save-exact
 
-    - name: Deploy Infrastructure
-      working-directory: ${{ github.workspace }}/src/Infra
-      run: |
-        az deployment group create \
-          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-          --template-file infra.bicep \
-          --parameters @infra.parameters.json
-
-
-    - name: Create deployment package
-      run: |
-        mkdir deployment
-        cp package*.json deployment/
-        cp -r app.js config.js views public deployment/
-        cd deployment
-        npm ci --only=production
-        zip -r ../nodeapp.zip ./*
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v1.0.0  # Changed from v2 to v1
-      with:
-        name: app-build
-        path: nodeapp.zip
-
-  deploy:
-    name: Deploy Application
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Download artifact
-      uses: actions/download-artifact@v1.0.0  # Changed from v2 to v1
-      with:
-        name: app-build
-
     - name: Set up Azure CLI
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    
+    - name: Az Bicep Deployment
+      working-directory: ${{ github.workspace }}/src/Infra
+      run: |
+        az deployment group create \
+          --resource-group ah-infra-deployment-rg \
+          --template-file infra.bicep \
+          --parameters @infra.parameters.json
+          
+    - name: Prepare deployment package
+      run: |
+        # Create deployment directory
+        mkdir deployment
+        # Copy application files
+        cp package*.json deployment/
+        cp -r app.js config.js views public deployment/
+        cd deployment
+        # Install production dependencies
+        npm ci --only=production
+        # Create deployment package
+        zip -r ../nodeapp.zip ./*
+
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
