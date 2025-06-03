@@ -44,7 +44,7 @@ jobs:
       with:
           scope: subscription
           region: centralus
-          template: ./src/bicep/resourceGroup.bicep
+          template: ./src/Infra/resourceGroup.bicep
           parameters: ''
           deploymentName: create-resource-group
 
