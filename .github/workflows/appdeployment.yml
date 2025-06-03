@@ -39,13 +39,24 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Az Bicep Deployment
-      working-directory: ${{ github.workspace }}/src/Infra
-      run: |
-        az deployment group create \
-          --resource-group ah-infra-deployment-rg \
-          --template-file infra.bicep \
-          --parameters @infra.parameters.json
+    - name: Deploy Resource Group (Subscription Scope)
+      uses: azure/arm-deploy@v2
+      with:
+          scope: subscription
+          region: centralus
+          template: ./src/bicep/resourceGroup.bicep
+          parameters: ''
+          deploymentName: create-resource-group
+
+    - name: Deploy Infrastructure (Resource Group Scope)
+      uses: azure/arm-deploy@v2
+      with:
+          scope: resourcegroup
+          resourceGroupName: ahtaskrg324  
+          template: ./src/bicep/infra.bicep
+          parameters: ./src/bicep/infra.parameters.json
+          deploymentName: deploy-infra
+          failOnStdErr: false
           
     - name: Prepare deployment package
       run: |
