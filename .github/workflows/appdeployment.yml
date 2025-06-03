@@ -44,7 +44,7 @@ jobs:
       with:
           scope: subscription
           region: centralus
-          template: ./src/bicep/resourceGroup.bicep
+          template: ./src/Infra/resourceGroup.bicep
           parameters: ''
           deploymentName: create-resource-group
 
@@ -53,8 +53,8 @@ jobs:
       with:
           scope: resourcegroup
           resourceGroupName: ahtaskrg324  
-          template: ./src/bicep/infra.bicep
-          parameters: ./src/bicep/infra.parameters.json
+          template: ./src/Infra/infra.bicep
+          parameters: ./src/Infra/infra.parameters.json
           deploymentName: deploy-infra
           failOnStdErr: false
           
