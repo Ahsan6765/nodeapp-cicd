@@ -58,18 +58,22 @@ jobs:
           deploymentName: deploy-infra
           failOnStdErr: false
           
-    - name: Prepare deployment package
+    - name: Install Dependencies (Production Only)
+      run: npm ci --only=production
+
+    - name: Create Deployment Directory
       run: |
-        # Create deployment directory
-        mkdir deployment
-        # Copy application files
+       mkdir deployment
         cp package*.json deployment/
         cp -r app.js config.js views public deployment/
-        cd deployment
-        # Install production dependencies
-        npm ci --only=production
-        # Create deployment package
-        zip -r ../nodeapp.zip ./*
+
+    - name: Copy Node Modules to Deployment
+      run: cp -r node_modules deployment/
+
+    - name: Create Deployment Zip
+      uses: montudor/action-zip@v1
+      with:
+        args: zip -qq -r nodeapp.zip deployment
 
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
