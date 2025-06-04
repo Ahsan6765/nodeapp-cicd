@@ -101,7 +101,7 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-      linuxFxVersion: 'NODE|18-lts'
+      linuxFxVersion: 'NODE|22-lts'
       appSettings: [
         {
           name: 'AZURE_SQL_CONNECTION_STRING'
