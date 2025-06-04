@@ -1,0 +1,76 @@
+name: Deploy Node.js App and Azure Infra
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22.x'
+  AZURE_WEBAPP_NAME: 'mynodeapp3123'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Azure CLI
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy Resource Group (Subscription Scope)
+      uses: azure/arm-deploy@v2
+      with:
+          scope: subscription
+          region: centralus
+          template: ./src/Infra/resourceGroup.bicep
+          parameters: ''
+          deploymentName: create-resource-group
+
+    - name: Deploy Infrastructure (Resource Group Scope)
+      uses: azure/arm-deploy@v2
+      with:
+          scope: resourcegroup
+          resourceGroupName: ahtaskrg324  
+          template: ./src/Infra/infra.bicep
+          parameters: ./src/Infra/infra.parameters.json
+          deploymentName: deploy-infra
+          failOnStdErr: false
+          
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '22.x'
+
+    - name: npm install, build, and test
+      run: |
+        npm install
+        npm run build --if-present
+        npm run test --if-present
+
+    - name: Zip artifact for deployment
+      run: zip nodeapp.zip ./* -r
+
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        package: nodeapp.zip
+        startup-command: 'npm start'
