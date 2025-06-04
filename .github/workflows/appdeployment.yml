@@ -61,7 +61,7 @@ jobs:
         npm run test --if-present
 
     - name: Zip artifact for deployment
-      run: zip release.zip ./* -r
+      run: zip nodeapp.zip ./* -r
 
     - name: Azure Login
       uses: azure/login@v2
